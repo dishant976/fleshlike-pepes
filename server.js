@@ -60,34 +60,30 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve static files (the HTML UI)
+// Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
-// API routes
+// ── API ROUTES ────────────────────────────────────────────────────────────────
+
 app.get("/collection", async (req, res) => {
   try {
     const cacheKey = "collection_info";
     if (cache.has(cacheKey)) return res.json(cache.get(cacheKey));
     const [name, symbol, totalSupply] = await Promise.all([
-      contract.name(),
-      contract.symbol(),
-      contract.totalSupply(),
+      contract.name(), contract.symbol(), contract.totalSupply(),
     ]);
     const info = {
       name, symbol,
       totalSupply: Number(totalSupply),
       contract: CONTRACT_ADDRESS,
-      chain: "ethereum",
-      chainId: CHAIN_ID,
+      chain: "ethereum", chainId: CHAIN_ID,
       standard: "ERC-721",
       imageType: "SVG (fully on-chain)",
       opensea: "https://opensea.io/collection/fleshlike-pepes",
     };
     cache.set(cacheKey, info, 60);
     res.json(info);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/tokens", async (req, res) => {
@@ -101,23 +97,7 @@ app.get("/tokens", async (req, res) => {
     const ids = Array.from({ length: end - start }, (_, i) => start + i + 1);
     const tokens = await Promise.all(ids.map((id) => getTokenMeta(id)));
     res.json({ page, limit, total: totalSupply, pages: Math.ceil(totalSupply / limit), tokens });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/token/:id", async (req, res) => {
-  try {
-    const tokenId = parseInt(req.params.id);
-    if (isNaN(tokenId) || tokenId < 1) return res.status(400).json({ error: "Invalid token ID" });
-    const meta = await getTokenMeta(tokenId);
-    res.json(meta);
-  } catch (err) {
-    if (err.message.includes("nonexistent") || err.code === "CALL_EXCEPTION") {
-      return res.status(404).json({ error: "Token not found" });
-    }
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/token/:id/image", async (req, res) => {
@@ -142,9 +122,7 @@ app.get("/token/:id/image", async (req, res) => {
     res.setHeader("Content-Type", "image/svg+xml");
     res.setHeader("Cache-Control", "public, max-age=86400");
     res.send(svg);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/token/:id/owner", async (req, res) => {
@@ -153,9 +131,7 @@ app.get("/token/:id/owner", async (req, res) => {
     if (isNaN(tokenId) || tokenId < 1) return res.status(400).json({ error: "Invalid token ID" });
     const owner = await contract.ownerOf(tokenId);
     res.json({ tokenId, owner });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/token/:id/traits", async (req, res) => {
@@ -164,7 +140,19 @@ app.get("/token/:id/traits", async (req, res) => {
     if (isNaN(tokenId) || tokenId < 1) return res.status(400).json({ error: "Invalid token ID" });
     const meta = await getTokenMeta(tokenId);
     res.json({ tokenId, attributes: meta.attributes || [] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get("/token/:id", async (req, res) => {
+  try {
+    const tokenId = parseInt(req.params.id);
+    if (isNaN(tokenId) || tokenId < 1) return res.status(400).json({ error: "Invalid token ID" });
+    const meta = await getTokenMeta(tokenId);
+    res.json(meta);
   } catch (err) {
+    if (err.message.includes("nonexistent") || err.code === "CALL_EXCEPTION") {
+      return res.status(404).json({ error: "Token not found" });
+    }
     res.status(500).json({ error: err.message });
   }
 });
@@ -183,9 +171,7 @@ app.get("/owner/:address", async (req, res) => {
     const result = { address, balance, tokens };
     cache.set(cacheKey, result, 60);
     res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/traits", (req, res) => {
@@ -204,21 +190,14 @@ app.get("/transfer-events", async (req, res) => {
     const result = events.slice(-limit).map((e) => ({
       txHash: e.transactionHash,
       blockNumber: e.blockNumber,
-      from: e.args[0],
-      to: e.args[1],
+      from: e.args[0], to: e.args[1],
       tokenId: Number(e.args[2]),
       type: e.args[0] === ethers.ZeroAddress ? "mint" : e.args[1] === ethers.ZeroAddress ? "burn" : "transfer",
     }));
     res.json({ fromBlock, toBlock, count: result.length, events: result });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
+app.use((req, res) => res.status(404).json({ error: "Route not found" }));
 
-app.listen(PORT, () => {
-  console.log(`Fleshlike Pepes API running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Running on http://localhost:${PORT}`));
