@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fleshlike Pepes Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#4a9e3f;--green-light:#6dc460;--green-dim:#2d6b24;
+  --bg:#0a0a0a;--bg2:#111;--bg3:#181818;--bg4:#1e1e1e;
+  --border:#222;--border2:#2a2a2a;
+  --text:#f0f0f0;--text2:#888;--text3:#444;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Mono',monospace}
+body{display:flex;flex-direction:column;min-height:100vh}
+
+/* HEADER */
+header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:100}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-circle{width:36px;height:36px;border-radius:50%;background:var(--green-dim);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:18px}
+.site-title{font-family:'Bebas Neue',monospace;font-size:22px;letter-spacing:3px;color:var(--text)}
+.site-sub{font-size:9px;color:var(--text2);letter-spacing:2px;margin-top:1px}
+.header-pill{font-size:10px;color:var(--green);border:1px solid var(--green-dim);padding:4px 10px;border-radius:20px;letter-spacing:1px}
+
+/* STATS BAR */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
+.stat{padding:1rem 1.5rem;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-label{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.stat-val{font-size:20px;font-family:'Bebas Neue',monospace;letter-spacing:1px;color:var(--text)}
+.stat-val.green{color:var(--green)}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg)}
+.tab{padding:12px 20px;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.tab:hover{color:var(--text)}
+
+/* MAIN */
+main{flex:1;padding:1.5rem}
+.panel{display:none}
+.panel.active{display:block}
+
+/* CONTROLS */
+.controls{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+input[type=number],input[type=text]{font-family:'Space Mono',monospace;font-size:12px;padding:9px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);outline:none;transition:border-color .15s}
+input[type=number]:focus,input[type=text]:focus{border-color:var(--green)}
+input::placeholder{color:var(--text3)}
+.btn{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;padding:9px 16px;border:1px solid var(--green-dim);background:transparent;color:var(--green);border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--green);color:#000}
+.btn.ghost{border-color:var(--border2);color:var(--text2)}
+.btn.ghost:hover{border-color:var(--text2);color:var(--text);background:transparent}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s}
+.card:hover{border-color:var(--green);transform:translateY(-2px)}
+.card-img{width:100%;aspect-ratio:1;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.card-img img{width:100%;height:100%;object-fit:contain}
+.card-img .placeholder{font-size:10px;color:var(--text3)}
+.card-body{padding:8px 10px}
+.card-id{font-size:12px;font-weight:700;color:var(--text)}
+.card-sub{font-size:10px;color:var(--green);margin-top:1px}
+
+/* PAGER */
+.pager{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:1.25rem}
+.pager-info{font-size:11px;color:var(--text2)}
+
+/* DETAIL */
+.detail-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.detail-inner{display:flex;gap:1.5rem}
+.detail-img{width:180px;height:180px;flex-shrink:0;background:var(--bg3);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.detail-img img{width:100%;height:100%;object-fit:contain}
+.detail-info{flex:1;min-width:0}
+.detail-name{font-family:'Bebas Neue',monospace;font-size:28px;letter-spacing:2px;margin-bottom:6px}
+.detail-owner{font-size:10px;color:var(--text2);word-break:break-all;margin-bottom:12px;line-height:1.6}
+.detail-owner span{color:var(--text3);display:block;margin-bottom:2px}
+.detail-links{display:flex;gap:8px;flex-wrap:wrap}
+.link-btn{font-size:10px;color:var(--green);border:1px solid var(--green-dim);padding:5px 12px;border-radius:20px;text-decoration:none;letter-spacing:1px;transition:all .15s}
+.link-btn:hover{background:var(--green);color:#000}
+.traits-title{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin:1.25rem 0 8px}
+.traits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px}
+.trait{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.trait-type{font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:1px}
+.trait-val{font-size:12px;color:var(--text);margin-top:2px}
+
+/* WALLET */
+.wallet-header{font-size:11px;color:var(--text2);margin-bottom:1rem;padding:10px 12px;background:var(--bg2);border-radius:6px;border:1px solid var(--border)}
+.wallet-header strong{color:var(--text)}
+
+/* ACTIVITY */
+.events{display:flex;flex-direction:column;gap:6px}
+.event-row{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.badge{font-size:9px;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;font-weight:700;flex-shrink:0}
+.badge.mint{background:#0d2e0d;color:#6dc460;border:1px solid #2d6b24}
+.badge.transfer{background:#0d1e2e;color:#6aade4;border:1px solid #1a3d5c}
+.badge.burn{background:#2e0d0d;color:#e46a6a;border:1px solid #5c1a1a}
+.event-token{font-size:13px;font-weight:700;color:var(--text)}
+.event-addr{font-size:10px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.event-link{font-size:10px;color:var(--green);text-decoration:none;flex-shrink:0}
+.event-link:hover{text-decoration:underline}
+
+/* MSG */
+.msg{text-align:center;padding:3rem 0;font-size:12px;color:var(--text2)}
+.msg-title{font-size:14px;color:var(--text);margin-bottom:6px}
+
+/* CONTRACT BAR */
+.contract-bar{padding:.75rem 1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--bg)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.contract-addr{font-size:10px;color:var(--text2);letter-spacing:.5px}
+.contract-addr strong{color:var(--text)}
+
+@media(max-width:600px){
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  .detail-inner{flex-direction:column}
+  .detail-img{width:100%;height:200px}
+  header{flex-direction:column;gap:8px;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-row">
+    <div class="logo-circle">🐸</div>
+    <div>
+      <div class="site-title">Fleshlike Pepes</div>
+      <div class="site-sub">On-Chain Explorer</div>
+    </div>
+  </div>
+  <div class="header-pill">Ethereum Mainnet</div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-label">Total Supply</div><div class="stat-val green" id="s-supply">—</div></div>
+  <div class="stat"><div class="stat-label">Floor Price</div><div class="stat-val green">0.001 ETH</div></div>
+  <div class="stat"><div class="stat-label">Unique Owners</div><div class="stat-val">1,246</div></div>
+  <div class="stat"><div class="stat-label">Total Volume</div><div class="stat-val">0.10 ETH</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="browse" onclick="switchTab('browse',this)">Browse</button>
+  <button class="tab" data-tab="lookup" onclick="switchTab('lookup',this)">Token Lookup</button>
+  <button class="tab" data-tab="wallet" onclick="switchTab('wallet',this)">Wallet</button>
+  <button class="tab" data-tab="activity" onclick="switchTab('activity',this)">Activity</button>
+</div>
+
+<main>
+
+  <!-- BROWSE -->
+  <div id="tab-browse" class="panel active">
+    <div class="controls">
+      <input type="number" id="page-inp" placeholder="Page #" min="1" style="width:90px"/>
+      <button class="btn" onclick="loadPage()">Go</button>
+      <button class="btn ghost" onclick="prevPage()">← Prev</button>
+      <button class="btn ghost" onclick="nextPage()">Next →</button>
+      <span class="pager-info" id="pager-info" style="margin-left:4px"></span>
+    </div>
+    <div id="grid-msg" class="msg"><div class="msg-title">Loading frogs...</div></div>
+    <div class="grid" id="nft-grid" style="display:none"></div>
+    <div class="pager" id="pager" style="display:none">
+      <button class="btn ghost" onclick="prevPage()">← Prev</button>
+      <span class="pager-info" id="pager-info-bottom"></span>
+      <button class="btn ghost" onclick="nextPage()">Next →</button>
+    </div>
+  </div>
+
+  <!-- LOOKUP -->
+  <div id="tab-lookup" class="panel">
+    <div class="controls">
+      <input type="number" id="token-id-inp" placeholder="Token ID (1 – 2290)" min="1" max="2290" style="width:200px"/>
+      <button class="btn" onclick="lookupToken()">Fetch Token</button>
+    </div>
+    <div id="token-detail"></div>
+  </div>
+
+  <!-- WALLET -->
+  <div id="tab-wallet" class="panel">
+    <div class="controls">
+      <input type="text" id="wallet-inp" placeholder="0x wallet address" style="width:360px;max-width:100%"/>
+      <button class="btn" onclick="lookupWallet()">Look Up</button>
+    </div>
+    <div id="wallet-result"></div>
+  </div>
+
+  <!-- ACTIVITY -->
+  <div id="tab-activity" class="panel">
+    <div class="controls">
+      <select id="block-range" style="font-family:'Space Mono',monospace;font-size:11px;padding:9px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text)">
+        <option value="1000">Last 1,000 blocks</option>
+        <option value="3000" selected>Last 3,000 blocks</option>
+        <option value="5000">Last 5,000 blocks</option>
+      </select>
+      <button class="btn" onclick="loadActivity()">Refresh</button>
+    </div>
+    <div id="events-container"><div class="msg"><div class="msg-title">Loading activity...</div></div></div>
+  </div>
+
+</main>
+
+<div class="contract-bar">
+  <span class="dot"></span>
+  <span class="contract-addr"><strong>Contract:</strong> 0x4a7a72b0d8bbbe5a218f079bccd74861591f9b50 · Ethereum Mainnet · ERC-721</span>
+</div>
+
+<script>
+const API = '';  // empty = same origin (your vercel domain)
+let currentPage = 1;
+let totalPages = 1;
+const LIMIT = 24;
+
+async function apiFetch(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+// Load collection stats
+async function loadStats() {
+  try {
+    const d = await apiFetch('/collection');
+    document.getElementById('s-supply').textContent = d.totalSupply.toLocaleString();
+  } catch(e) {}
+}
+
+// Browse grid
+async function loadPage(p) {
+  if (p) currentPage = p;
+  const grid = document.getElementById('nft-grid');
+  const msg = document.getElementById('grid-msg');
+  grid.style.display = 'none';
+  msg.style.display = 'block';
+  msg.innerHTML = '<div class="msg-title">Loading frogs...</div>';
+  try {
+    const d = await apiFetch(`/tokens?page=${currentPage}&limit=${LIMIT}`);
+    totalPages = d.pages;
+    grid.innerHTML = '';
+    d.tokens.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-img">
+          <img src="/token/${t.tokenId}/image" loading="lazy"
+            onerror="this.parentNode.innerHTML='<span class=placeholder>#${t.tokenId}</span>'" />
+        </div>
+        <div class="card-body">
+          <div class="card-id">#${t.tokenId}</div>
+          <div class="card-sub">0.001 ETH</div>
+        </div>`;
+      card.onclick = () => { switchTabByName('lookup'); document.getElementById('token-id-inp').value = t.tokenId; lookupToken(); };
+      grid.appendChild(card);
+    });
+    grid.style.display = 'grid';
+    msg.style.display = 'none';
+    const info = `Page ${currentPage} of ${totalPages} · ${d.total.toLocaleString()} items`;
+    document.getElementById('pager-info').textContent = info;
+    document.getElementById('pager-info-bottom').textContent = info;
+    document.getElementById('pager').style.display = 'flex';
+    document.getElementById('page-inp').value = currentPage;
+  } catch(e) {
+    msg.innerHTML = '<div class="msg-title">Failed to load</div><div>The API may be waking up — try again in a moment.</div>';
+  }
+}
+
+function prevPage() { if (currentPage > 1) loadPage(currentPage - 1); }
+function nextPage() { if (currentPage < totalPages) loadPage(currentPage + 1); }
+
+// Token lookup
+async function lookupToken() {
+  const id = parseInt(document.getElementById('token-id-inp').value);
+  if (!id || id < 1) return;
+  const el = document.getElementById('token-detail');
+  el.innerHTML = '<div class="msg"><div class="msg-title">Fetching from chain...</div></div>';
+  try {
+    const t = await apiFetch(`/token/${id}`);
+    const attrs = (t.attributes || []).map(a =>
+      `<div class="trait"><div class="trait-type">${a.trait_type}</div><div class="trait-val">${a.value}</div></div>`
+    ).join('');
+    el.innerHTML = `
+      <div class="detail-card">
+        <div class="detail-inner">
+          <div class="detail-img"><img src="/token/${id}/image" /></div>
+          <div class="detail-info">
+            <div class="detail-name">${t.name || 'Fleshlike Pepes #' + id}</div>
+            <div class="detail-owner">
+              <span>Owner</span>
+              ${t.owner}
+            </div>
+            <div class="detail-links">
+              <a class="link-btn" href="https://opensea.io/item/ethereum/0x4a7a72b0d8bbbe5a218f079bccd74861591f9b50/${id}" target="_blank">OpenSea ↗</a>
+              <a class="link-btn" href="https://etherscan.io/token/0x4a7a72b0d8bbbe5a218f079bccd74861591f9b50?a=${id}" target="_blank">Etherscan ↗</a>
+              <a class="link-btn" href="/token/${id}" target="_blank">Raw JSON ↗</a>
+            </div>
+          </div>
+        </div>
+        ${attrs ? `<div class="traits-title">Traits</div><div class="traits-grid">${attrs}</div>` : ''}
+      </div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="msg"><div class="msg-title">Token #${id} not found</div></div>`;
+  }
+}
+
+// Wallet lookup
+async function lookupWallet() {
+  const addr = document.getElementById('wallet-inp').value.trim();
+  if (!addr || !addr.startsWith('0x')) { alert('Enter a valid 0x address'); return; }
+  const el = document.getElementById('wallet-result');
+  el.innerHTML = '<div class="msg"><div class="msg-title">Scanning wallet...</div></div>';
+  try {
+    const d = await apiFetch(`/owner/${addr}`);
+    if (d.balance === 0) { el.innerHTML = '<div class="msg"><div class="msg-title">No Fleshlike Pepes found</div>This wallet holds zero tokens from this collection.</div>'; return; }
+    const cards = d.tokens.map(t => `
+      <div class="card" onclick="switchTabByName('lookup');document.getElementById('token-id-inp').value=${t.tokenId};lookupToken()">
+        <div class="card-img"><img src="/token/${t.tokenId}/image" loading="lazy" /></div>
+        <div class="card-body"><div class="card-id">#${t.tokenId}</div></div>
+      </div>`).join('');
+    el.innerHTML = `
+      <div class="wallet-header">Found <strong>${d.balance} token${d.balance > 1 ? 's' : ''}</strong> in ${addr.slice(0,6)}...${addr.slice(-4)}</div>
+      <div class="grid">${cards}</div>`;
+  } catch(e) {
+    el.innerHTML = '<div class="msg"><div class="msg-title">Error</div>Invalid address or API error.</div>';
+  }
+}
+
+// Activity feed
+async function loadActivity() {
+  const el = document.getElementById('events-container');
+  el.innerHTML = '<div class="msg"><div class="msg-title">Scanning blocks...</div></div>';
+  try {
+    const d = await apiFetch('/transfer-events?limit=40');
+    if (!d.events || !d.events.length) { el.innerHTML = '<div class="msg"><div class="msg-title">No recent events</div></div>'; return; }
+    const rows = [...d.events].reverse().map(e => `
+      <div class="event-row">
+        <span class="badge ${e.type}">${e.type}</span>
+        <span class="event-token">#${e.tokenId}</span>
+        <span class="event-addr">→ ${e.to}</span>
+        <a class="event-link" href="https://etherscan.io/tx/${e.txHash}" target="_blank">tx ↗</a>
+      </div>`).join('');
+    el.innerHTML = `<div class="events">${rows}</div>`;
+  } catch(e) {
+    el.innerHTML = '<div class="msg"><div class="msg-title">Could not load events</div></div>';
+  }
+}
+
+// Tab switching
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'activity') loadActivity();
+}
+
+function switchTabByName(name) {
+  const btn = document.querySelector(`.tab[data-tab="${name}"]`);
+  if (btn) switchTab(name, btn);
+}
+
+loadStats();
+loadPage(1);
+</script>
+</body>
+</html>
